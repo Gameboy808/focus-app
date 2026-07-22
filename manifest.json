@@ -1,0 +1,52 @@
+{
+  "name": "Focus - 个人执行教练",
+  "short_name": "Focus",
+  "description": "每日智能规划 + 逾期任务自动梳理 + 想法速记 + 视频灵感 + 英语学习 + 进度可视化",
+  "start_url": "/focus-app/",
+  "scope": "/focus-app/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08080d",
+  "theme_color": "#08080d",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/focus-app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/focus-app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/focus-app/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/focus-app/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "仪表盘",
+      "url": "/focus-app/?view=dashboard"
+    },
+    {
+      "name": "灵感",
+      "url": "/focus-app/?view=inspiration"
+    },
+    {
+      "name": "英语学习",
+      "url": "/focus-app/?view=english"
+    }
+  ]
+}
