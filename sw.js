@@ -1,5 +1,5 @@
-// Focus PWA Service Worker - v1.0
-const CACHE_VERSION = 'focus-v1';
+// Focus PWA Service Worker - v2.0
+const CACHE_VERSION = 'focus-v2';
 const CACHE_ASSETS = [
   './',
   './index.html',
