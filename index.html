@@ -404,6 +404,58 @@ a{color:inherit;text-decoration:none}
 .pwa-install-banner .btn-install:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(217,163,74,0.3)}
 .pwa-install-banner .btn-dismiss{padding:8px 12px;border-radius:10px;font-size:0.8rem;font-weight:500;border:1px solid var(--border-card);cursor:pointer;background:transparent;color:var(--text-secondary);transition:all 0.2s}
 .pwa-install-banner .btn-dismiss:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+
+/* Timeline Reason */
+.timeline-reason{font-size:0.72rem;color:var(--text-secondary);margin-top:3px;line-height:1.3;opacity:0.85}
+
+/* Idea Category Badge & Reason */
+.idea-cat-badge{display:inline-block;font-size:0.63rem;padding:2px 8px;border-radius:6px;font-weight:600;line-height:1.4}
+.idea-reason{font-size:0.72rem;color:var(--text-secondary);margin-top:3px;line-height:1.3;opacity:0.8}
+
+/* Calendar */
+.calendar-card{margin-top:18px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav-btn{background:var(--bg-card);border:1px solid var(--border-card);color:var(--text-primary);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.cal-nav-btn:hover{background:var(--bg-card-hover);border-color:var(--accent-amber)}
+.cal-month-label{font-size:0.9rem;font-weight:600;color:var(--text-primary)}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-weekday{text-align:center;font-size:0.68rem;color:var(--text-muted);padding:2px 0;font-weight:500}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{aspect-ratio:1;border-radius:8px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all 0.15s;position:relative;background:var(--bg-card);border:1px solid transparent;overflow:hidden}
+.cal-day:hover{background:var(--bg-card-hover);border-color:var(--border-card)}
+.cal-day.empty{background:transparent;cursor:default}
+.cal-day.today{background:var(--accent-amber-soft);border-color:var(--accent-amber)}
+.cal-day.today .cal-day-num{color:var(--accent-amber);font-weight:700}
+.cal-day.holiday{background:rgba(232,179,57,0.08)}
+.cal-day.holiday .cal-day-num{color:var(--accent-amber)}
+.cal-day.active{border-color:var(--accent-amber)}
+.cal-day-num{font-size:0.78rem;color:var(--text-primary);line-height:1;font-weight:500}
+.cal-holiday-text{font-size:0.5rem;color:var(--accent-amber);text-align:center;margin-top:1px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cal-activity-count{position:absolute;top:2px;right:3px;font-size:0.55rem;color:var(--text-muted);background:var(--bg-secondary);border-radius:4px;padding:0 3px;line-height:1.3}
+.cal-dots{display:flex;gap:2px;margin-top:auto;padding-top:2px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot.task-dot{background:var(--accent-amber)}
+.cal-dot.event-dot{background:#4ec9b0}
+.cal-dot.holiday-dot{background:var(--accent-coral)}
+.cal-legend{display:flex;gap:14px;margin-top:10px;justify-content:center}
+.cal-legend-item{display:flex;align-items:center;gap:4px;font-size:0.68rem;color:var(--text-secondary)}
+
+/* Calendar Day Detail Modal */
+.cal-day-detail{margin:8px 0}
+.cal-detail-holiday{font-size:0.85rem;color:var(--accent-amber);font-weight:600;margin-bottom:8px;padding:6px 10px;background:var(--accent-amber-soft);border-radius:8px}
+.cal-detail-section{margin-bottom:10px}
+.cal-detail-title{font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.cal-detail-item{padding:6px 10px;background:var(--bg-card);border-radius:8px;margin-bottom:4px;font-size:0.82rem;color:var(--text-primary);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cal-detail-item.done{opacity:0.5;text-decoration:line-through}
+.cal-detail-item.event{color:var(--text-secondary)}
+.cal-detail-desc{font-size:0.72rem;color:var(--text-muted);margin-top:2px;width:100%}
+.cal-add-event{display:flex;gap:6px;margin-top:10px}
+.cal-event-input{flex:1}
+@media(max-width:768px){
+  .cal-day-num{font-size:0.72rem}
+  .cal-holiday-text{display:none}
+  .cal-activity-count{font-size:0.5rem}
+}
 </style>
 </head>
 <body>
@@ -530,6 +582,14 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="task-list" id="recentIdeas" style="max-height:180px"></div>
       </div>
+    </div>
+    <!-- Calendar -->
+    <div class="card calendar-card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-title-dot green"></span><span data-i18n="cal.title">月历</span></div>
+        <button class="btn btn-secondary btn-sm" onclick="calDayClick(today())" data-i18n="cal.today">今天</button>
+      </div>
+      <div id="calendarContainer"></div>
     </div>
   </div>
 
@@ -680,6 +740,17 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<!-- Calendar Day Modal -->
+<div class="modal-overlay" id="calendarDayModal">
+  <div class="modal">
+    <div class="modal-title" id="calendarDayTitle"></div>
+    <div id="calendarDayContent"></div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('calendarDayModal').classList.remove('open')" data-i18n="cal.close">关闭</button>
+    </div>
+  </div>
+</div>
+
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
@@ -687,6 +758,15 @@ a{color:inherit;text-decoration:none}
     <div class="form-group"><label class="form-label" data-i18n="settings.name">你的名字</label><input type="text" class="form-input" id="settingsName" data-i18n-placeholder="settings.namePlaceholder"></div>
     <div class="form-group"><label class="form-label" data-i18n="settings.reviewTime">每日回顾时间</label><input type="time" class="form-input" id="settingsReviewTime">
       <div class="text-xs text-muted mt-2" data-i18n="settings.reviewTimeHint">我们会在这个时间提醒你检查逾期任务。</div></div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="settings.dataSync">数据同步</label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" style="flex:1" onclick="exportData()" data-i18n="settings.exportData">导出备份</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('importFileInput').click()" data-i18n="settings.importData">导入备份</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
+      <div class="text-xs text-muted mt-2" data-i18n="settings.dataSyncHint">导出数据到文件，在另一台设备上导入即可同步。跨设备自动同步功能开发中。</div>
+    </div>
     <div class="form-group"><button class="btn btn-secondary" style="width:100%" onclick="resetAllData()" data-i18n="settings.resetData">重置所有数据</button>
       <div class="text-xs text-muted mt-2" style="color:var(--accent-coral)" data-i18n="settings.resetWarning">此操作不可撤销。</div></div>
     <div class="form-actions">
@@ -867,6 +947,35 @@ const I18N = {
   'installDesc':{en:'Desktop icon / Offline / Fullscreen',zh:'桌面图标 / 离线使用 / 全屏体验'},
   'install':{en:'Install',zh:'安装'},
   'later':{en:'Later',zh:'稍后'},
+  // Smart plan reasons
+  'plan.reason.overdue':{en:'Overdue {n}d — handle first',zh:'逾期 {n} 天，优先处理'},
+  'plan.reason.today':{en:'Due today',zh:'今天到期'},
+  'plan.reason.highPriority':{en:'High priority',zh:'高优先级'},
+  // Quick capture
+  'quickCapture.viewAll':{en:'View All',zh:'查看全部'},
+  // Calendar
+  'cal.title':{en:'Calendar',zh:'月历'},
+  'cal.today':{en:'Today',zh:'今天'},
+  'cal.close':{en:'Close',zh:'关闭'},
+  'cal.taskLegend':{en:'Tasks',zh:'任务'},
+  'cal.eventLegend':{en:'Events',zh:'行程'},
+  'cal.holidayLegend':{en:'Holidays',zh:'节日'},
+  'cal.tasksOnDay':{en:'Tasks',zh:'任务'},
+  'cal.eventsOnDay':{en:'Events',zh:'行程'},
+  'cal.noActivity':{en:'No activity. Add an event below.',zh:'暂无活动，可在下方添加行程。'},
+  'cal.eventPlaceholder':{en:'Event title...',zh:'行程标题...'},
+  'cal.addEvent':{en:'+ Add',zh:'+ 添加'},
+  // Data sync
+  'settings.dataSync':{en:'Data Sync',zh:'数据同步'},
+  'settings.exportData':{en:'Export Backup',zh:'导出备份'},
+  'settings.importData':{en:'Import Backup',zh:'导入备份'},
+  'settings.dataSyncHint':{en:'Export to file, import on another device. Auto sync coming soon.',zh:'导出数据到文件，在另一台设备上导入即可同步。跨设备自动同步功能开发中。'},
+  // Toast messages
+  'toast.eventAdded':{en:'Event added',zh:'行程已添加'},
+  'toast.eventAutoAdded':{en:"Today's event added to plan",zh:'今日行程已自动加入计划'},
+  'toast.dataExported':{en:'Data exported',zh:'数据已导出'},
+  'toast.dataImported':{en:'Data imported successfully',zh:'数据导入成功'},
+  'toast.importFailed':{en:'Import failed: invalid file',zh:'导入失败：文件格式错误'},
 };
 
 let currentLang='zh';
@@ -902,6 +1011,7 @@ const SK='focus_app_data_v2';
 
 function defData(){return{
   tasks:[],ideas:[],dailyPlans:{},inspSaved:[],inspFavorites:[],
+  events:{},
   settings:{name:'凉皮',reviewTime:'09:00',lang:'zh'},
   streak:{current:0,lastActiveDate:null,best:0,completedDates:[]},
   theme:{},english:{currentLesson:0,currentSentence:0,blindMode:false,shadowMode:false}
@@ -957,7 +1067,8 @@ function deleteTask(id){
 // IDEA CRUD
 // ============================================
 function addIdea(content,tags=[]){
-  const idea={id:uid(),content,tags:Array.isArray(tags)?tags:tags.split(',').map(t=>t.trim()).filter(Boolean),createdAt:now(),convertedToTask:null,source:null};
+  const category=autoCategorizeIdea(content);
+  const idea={id:uid(),content,tags:Array.isArray(tags)?tags:tags.split(',').map(t=>t.trim()).filter(Boolean),createdAt:now(),convertedToTask:null,source:null,category};
   appData.ideas.unshift(idea);saveData(appData);updateStreak('idea_added');return idea;
 }
 function deleteIdea(id){appData.ideas=appData.ideas.filter(i=>i.id!==id);saveData(appData)}
@@ -981,9 +1092,33 @@ function setFocusTask(taskId){
 function autoPlanDay(){
   const plan=getTodayPlan();const overdue=getTasks('overdue'),todayT=appData.tasks.filter(t=>t.status!=='completed'&&t.dueDate===today());
   const pending=appData.tasks.filter(t=>t.status==='pending'&&!isOverdue(t.dueDate)&&t.dueDate!==today());
-  const candidates=[...overdue,...todayT,...pending.filter(t=>t.priority==='high')];
+  const highP=pending.filter(t=>t.priority==='high');
+  const candidates=[...overdue,...todayT,...highP];
+  // Sort: overdue first (oldest first), then today tasks by priority, then high priority pending
+  const pOrder={high:0,medium:1,low:2};
+  candidates.sort((a,b)=>{
+    const aOver=isOverdue(a.dueDate),bOver=isOverdue(b.dueDate);
+    if(aOver&&!bOver)return-1;
+    if(!aOver&&bOver)return 1;
+    return pOrder[a.priority]-pOrder[b.priority];
+  });
   if(candidates.length===0){showToast(tp('toast.noTasksToPlan'),'warning');return}
-  setFocusTask(candidates[0].id);plan.scheduledTasks=candidates.slice(0,6).map(t=>t.id);saveData(appData);
+  // Build reasons
+  plan.reasons={};
+  candidates.forEach(t=>{
+    if(isOverdue(t.dueDate)){
+      const days=daysBetween(t.dueDate,today());
+      plan.reasons[t.id]=tp('plan.reason.overdue',{n:days});
+    }else if(t.dueDate===today()){
+      plan.reasons[t.id]=tp('plan.reason.today');
+    }else if(t.priority==='high'){
+      plan.reasons[t.id]=tp('plan.reason.highPriority');
+    }
+  });
+  // Focus = first candidate
+  setFocusTask(candidates[0].id);
+  plan.scheduledTasks=candidates.slice(0,6).map(t=>t.id);
+  saveData(appData);
   overdue.forEach(t=>updateTask(t.id,{dueDate:today()}));updateStreak('plan_created');
   showToast(tp('toast.dayPlanned',{n:candidates.length}),'success');renderAll();
 }
@@ -1011,7 +1146,7 @@ function showToast(msg,type='success'){
 // RENDER: DASHBOARD
 // ============================================
 function renderDashboard(){
-  renderGreeting();renderDate();renderOverdueBanner();renderFocusCard();renderTimeline();renderOverdueTasks();renderRecentIdeas();updateNavBadges();renderStreakMini();
+  renderGreeting();renderDate();renderOverdueBanner();renderFocusCard();renderTimeline();renderOverdueTasks();renderRecentIdeas();renderCalendar();updateNavBadges();renderStreakMini();
 }
 function renderGreeting(){
   const h=new Date().getHours(),key=h<12?'greeting.morning':h<18?'greeting.afternoon':'greeting.evening';
@@ -1045,7 +1180,8 @@ function renderTimeline(){
   c.innerHTML=tasks.map((task,idx)=>{
     let st='';if(task.status==='completed')st='done';else if(task.status==='in_progress')st='current';
     const h=9+Math.floor(idx*1.5),time=`${String(h).padStart(2,'0')}:${String((idx*30)%60).padStart(2,'0')}`;
-    return`<div class="timeline-item ${st}"><div style="position:relative;flex-shrink:0"><div class="timeline-dot"></div>${idx<tasks.length-1?'<div class="timeline-line"></div>':''}</div><div class="timeline-content"><div class="timeline-time">~ ${time}</div><div class="timeline-title" style="${task.status==='completed'?'text-decoration:line-through;opacity:0.6':''}">${escapeHtml(task.title)}</div><div style="display:flex;gap:4px;margin-top:2px"><span class="priority-badge priority-${task.priority}">${tp('priority.'+task.priority)}</span>${task.status==='completed'?`<span class="status-badge status-done">${tp('status.done')}</span>`:task.status==='in_progress'?`<span class="status-badge status-progress">${tp('status.in_progress')}</span>`:''}</div></div></div>`;
+    const reason=plan.reasons&&plan.reasons[task.id]?`<div class="timeline-reason">💡 ${plan.reasons[task.id]}</div>`:'';
+    return`<div class="timeline-item ${st}"><div style="position:relative;flex-shrink:0"><div class="timeline-dot"></div>${idx<tasks.length-1?'<div class="timeline-line"></div>':''}</div><div class="timeline-content"><div class="timeline-time">~ ${time}</div><div class="timeline-title" style="${task.status==='completed'?'text-decoration:line-through;opacity:0.6':''}">${escapeHtml(task.title)}</div><div style="display:flex;gap:4px;margin-top:2px;flex-wrap:wrap;align-items:center"><span class="priority-badge priority-${task.priority}">${tp('priority.'+task.priority)}</span>${task.status==='completed'?`<span class="status-badge status-done">${tp('status.done')}</span>`:task.status==='in_progress'?`<span class="status-badge status-progress">${tp('status.in_progress')}</span>`:''}</div>${reason}</div></div>`;
   }).join('');
 }
 function renderOverdueTasks(){
@@ -1054,9 +1190,17 @@ function renderOverdueTasks(){
   c.innerHTML=overdue.map(t=>renderTaskItem(t)).join('');
 }
 function renderRecentIdeas(){
-  const ideas=appData.ideas.slice(0,3),c=document.getElementById('recentIdeas');
+  const sorted=sortIdeasByPriority(appData.ideas);
+  const ideas=sorted.slice(0,8),c=document.getElementById('recentIdeas');
   if(ideas.length===0){c.innerHTML=`<div class="empty-state"><div class="empty-state-text">${tp('quickCapture.empty')}</div></div>`;return}
-  c.innerHTML=ideas.map(i=>`<div class="task-item" style="cursor:default"><div class="task-item-content"><div class="task-item-title">${escapeHtml(i.content.slice(0,60))}${i.content.length>60?'...':''}</div><div class="task-item-meta"><span class="task-item-date">${fmtDate(i.createdAt)}</span>${i.tags.map(t=>`<span class="idea-tag">${escapeHtml(t)}</span>`).join('')}</div></div></div>`).join('');
+  c.innerHTML=ideas.map(i=>{
+    const cat=getIdeaCategory(i.category||autoCategorizeIdea(i.content));
+    const catLabel=cat.label[currentLang]||cat.label.zh;
+    const catColor=cat.color;
+    const reason=cat.reason[currentLang]||cat.reason.zh;
+    return `<div class="task-item idea-item" style="cursor:default;display:flex;align-items:flex-start;gap:8px"><div class="task-item-content" style="flex:1;min-width:0"><div class="task-item-title">${escapeHtml(i.content.slice(0,80))}${i.content.length>80?'...':''}</div><div class="task-item-meta"><span class="idea-cat-badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${catLabel}</span><span class="task-item-date">${fmtDate(i.createdAt)}</span></div><div class="idea-reason">💡 ${reason}</div></div>${!i.convertedToTask?`<button class="btn btn-secondary btn-sm" style="font-size:0.65rem;padding:4px 8px;flex-shrink:0;align-self:center" onclick="event.stopPropagation();convertIdeaToTask('${i.id}');renderAll()">${tp('ideas.convert')}</button>`:''}</div>`;
+  }).join('');
+  if(appData.ideas.length>8){c.innerHTML+=`<div style="text-align:center;padding:8px"><button class="btn btn-secondary btn-sm" onclick="switchView('ideas')" data-i18n="quickCapture.viewAll">${tp('quickCapture.viewAll')}</button></div>`}
 }
 function renderTaskItem(task){
   const oc=isOverdue(task.dueDate)?'color:var(--accent-coral)':'color:var(--text-muted)';
@@ -1076,7 +1220,14 @@ function renderTaskList(){
 function renderIdeas(){
   const c=document.getElementById('ideasGrid');
   if(appData.ideas.length===0){c.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-text">${tp('ideas.empty')}</div></div>`;return}
-  c.innerHTML=appData.ideas.map(i=>`<div class="idea-card" onclick="openIdeaModal('${i.id}')"><div class="idea-content">${escapeHtml(i.content)}</div><div class="idea-footer"><div class="idea-tags">${i.tags.map(t=>`<span class="idea-tag">${escapeHtml(t)}</span>`).join('')}</div><div class="idea-date">${fmtDate(i.createdAt)}</div></div><div class="idea-card-actions" style="margin-top:6px">${!i.convertedToTask?`<button class="convert-btn" onclick="event.stopPropagation();convertIdeaToTask('${i.id}');renderAll()">${tp('ideas.convert')}</button>`:`<span class="status-badge status-done" style="font-size:0.63rem">${tp('status.taskCreated')}</span>`}<button class="btn-icon" onclick="event.stopPropagation();deleteIdea('${i.id}');renderAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div>`).join('');
+  const sorted=sortIdeasByPriority(appData.ideas);
+  c.innerHTML=sorted.map(i=>{
+    const cat=getIdeaCategory(i.category||autoCategorizeIdea(i.content));
+    const catLabel=cat.label[currentLang]||cat.label.zh;
+    const catColor=cat.color;
+    const reason=cat.reason[currentLang]||cat.reason.zh;
+    return `<div class="idea-card" onclick="openIdeaModal('${i.id}')"><div style="margin-bottom:6px"><span class="idea-cat-badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${catLabel}</span></div><div class="idea-content">${escapeHtml(i.content)}</div><div class="idea-reason" style="margin-top:4px">💡 ${reason}</div><div class="idea-footer"><div class="idea-tags">${i.tags.map(t=>`<span class="idea-tag">${escapeHtml(t)}</span>`).join('')}</div><div class="idea-date">${fmtDate(i.createdAt)}</div></div><div class="idea-card-actions" style="margin-top:6px">${!i.convertedToTask?`<button class="convert-btn" onclick="event.stopPropagation();convertIdeaToTask('${i.id}');renderAll()">${tp('ideas.convert')}</button>`:`<span class="status-badge status-done" style="font-size:0.63rem">${tp('status.taskCreated')}</span>`}<button class="btn-icon" onclick="event.stopPropagation();deleteIdea('${i.id}');renderAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div>`;
+  }).join('');
 }
 function renderProgress(){
   const total=appData.tasks.length,done=appData.tasks.filter(t=>t.status==='completed').length,pending=appData.tasks.filter(t=>t.status!=='completed').length,overdue=getTasks('overdue').length,rate=total>0?Math.round((done/total)*100):0;
@@ -1438,6 +1589,223 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('clic
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));etId=null;eIId=null}});
 
 // ============================================
+// IDEA AUTO-CATEGORIZATION & SORTING
+// ============================================
+const IDEA_CATEGORIES=[
+  {key:'commercial',label:{en:'Business',zh:'商业想法'},color:'#e8b339',keywords:['卖','赚钱','变现','收入','定价','产品','服务','客户','合作','赞助','广告','流量','变现','商业模式','私域','公域','电商','带货','付费','会员','订阅'],reason:{en:'Directly related to monetization — evaluate feasibility first',zh:'直接关系到变现，优先评估可行性'}},
+  {key:'content',label:{en:'Content',zh:'内容创作'},color:'#4ec9b0',keywords:['视频','拍摄','剪辑','口播','vlog','素材','脚本','标题','封面','字幕','配乐','转场','选题','文案','分镜','调色','剪辑思路','发布','涨粉','爆款'],reason:{en:'Content is the core of self-media — execute ASAP',zh:'内容是自媒体核心，尽快落地执行'}},
+  {key:'equipment',label:{en:'Equipment',zh:'购买设备'},color:'#d97757',keywords:['买','购买','设备','相机','镜头','三脚架','无人机','大疆','麦克风','灯光','配件','sd卡','电池','充电器','稳定器','监视器','录音'],reason:{en:'Clear purchase intent — compare prices then decide',zh:'有明确购买需求，对比价格后决策'}},
+  {key:'explore',label:{en:'To Try',zh:'打算尝试'},color:'#c586c0',keywords:['试试','尝试','想要','计划','打算','考虑','研究','探索','看看','了解一下','想法','maybe','或许','以后'],reason:{en:'Exploratory — schedule a small test',zh:'探索性想法，安排时间小规模测试'}},
+  {key:'learning',label:{en:'Learning',zh:'学习提升'},color:'#569cd6',keywords:['学习','学','练习','提升','英语','技能','课程','读书','看书','教程','复盘','总结'],reason:{en:'Long-term investment — set fixed weekly time',zh:'长期投资，每周固定时间学习'}},
+  {key:'life',label:{en:'Life',zh:'生活安排'},color:'#6a9955',keywords:['旅行','出行','预约','办理','安排','搬家','聚会','约见','体检','办证','签证','机票','酒店'],reason:{en:'Daily logistics — handle in gaps between work',zh:'日常事务，找空隙时间处理'}},
+  {key:'other',label:{en:'Other',zh:'其他'},color:'#808080',keywords:[],reason:{en:'Uncategorized — review and reclassify',zh:'未分类，待回顾后重新归类'}},
+];
+function autoCategorizeIdea(content){
+  const lower=content.toLowerCase();
+  for(const cat of IDEA_CATEGORIES){
+    if(cat.keywords.some(k=>lower.includes(k.toLowerCase())))return cat.key;
+  }
+  return 'other';
+}
+function getIdeaCategory(key){return IDEA_CATEGORIES.find(c=>c.key===key)||IDEA_CATEGORIES[IDEA_CATEGORIES.length-1]}
+function sortIdeasByPriority(ideas){
+  const order={commercial:0,content:1,equipment:2,explore:3,learning:4,life:5,other:6};
+  return ideas.slice().sort((a,b)=>{
+    const pa=order[a.category||autoCategorizeIdea(a.content)]||6;
+    const pb=order[b.category||autoCategorizeIdea(b.content)]||6;
+    if(pa!==pb)return pa-pb;
+    return new Date(b.createdAt)-new Date(a.createdAt);
+  });
+}
+
+// ============================================
+// CALENDAR VIEW
+// ============================================
+const CN_HOLIDAYS={
+  '1-1':{en:'New Year',zh:'元旦'},
+  '2-14':{en:"Valentine's Day",zh:'情人节'},
+  '3-8':{en:"Women's Day",zh:'妇女节'},
+  '3-12':{en:'Arbor Day',zh:'植树节'},
+  '4-1':{en:"April Fool's",zh:'愚人节'},
+  '5-1':{en:'Labor Day',zh:'劳动节'},
+  '5-4':{en:'Youth Day',zh:'青年节'},
+  '6-1':{en:"Children's Day",zh:'儿童节'},
+  '7-1':{en:'CCP Founding',zh:'建党节'},
+  '8-1':{en:'Army Day',zh:'建军节'},
+  '9-10':{en:"Teacher's Day",zh:'教师节'},
+  '10-1':{en:'National Day',zh:'国庆节'},
+  '11-11':{en:'Singles Day',zh:'双十一'},
+  '12-25':{en:'Christmas',zh:'圣诞节'},
+  // 2025 农历
+  '2025-1-29':{en:'Spring Festival',zh:'春节'},
+  '2025-2-12':{en:'Lantern Festival',zh:'元宵节'},
+  '2025-4-4':{en:'Qingming',zh:'清明节'},
+  '2025-5-31':{en:'Dragon Boat',zh:'端午节'},
+  '2025-8-29':{en:'Qixi',zh:'七夕'},
+  '2025-10-6':{en:'Mid-Autumn',zh:'中秋节'},
+  '2025-10-29':{en:'Double Ninth',zh:'重阳节'},
+  // 2026 农历
+  '2026-2-17':{en:'Spring Festival',zh:'春节'},
+  '2026-3-3':{en:'Lantern Festival',zh:'元宵节'},
+  '2026-4-5':{en:'Qingming',zh:'清明节'},
+  '2026-6-19':{en:'Dragon Boat',zh:'端午节'},
+  '2026-8-19':{en:'Qixi',zh:'七夕'},
+  '2026-9-25':{en:'Mid-Autumn',zh:'中秋节'},
+  '2026-10-18':{en:'Double Ninth',zh:'重阳节'},
+};
+let calCursor=new Date();
+function getHoliday(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const md=`${d.getMonth()+1}-${d.getDate()}`;
+  const ymd=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  return CN_HOLIDAYS[ymd]||CN_HOLIDAYS[md]||null;
+}
+function renderCalendar(){
+  const y=calCursor.getFullYear(),m=calCursor.getMonth();
+  const todayStr=today();
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const monthNames=currentLang==='en'?
+    ['January','February','March','April','May','June','July','August','September','October','November','December']:
+    ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const weekDays=currentLang==='en'?
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:
+    ['日','一','二','三','四','五','六'];
+
+  // Collect active dates
+  const activeDates={};
+  appData.tasks.forEach(t=>{
+    if(t.dueDate){
+      if(!activeDates[t.dueDate])activeDates[t.dueDate]={tasks:[],events:[]};
+      activeDates[t.dueDate].tasks.push(t);
+    }
+  });
+  if(appData.events){
+    Object.entries(appData.events).forEach(([date,ev])=>{
+      if(!activeDates[date])activeDates[date]={tasks:[],events:[]};
+      activeDates[date].events.push(ev);
+    });
+  }
+
+  let html=`<div class="cal-header"><button class="cal-nav-btn" onclick="calPrevMonth()">‹</button><span class="cal-month-label">${monthNames[m]} ${y}</span><button class="cal-nav-btn" onclick="calNextMonth()">›</button></div>`;
+  html+=`<div class="cal-weekdays">${weekDays.map(w=>`<div class="cal-weekday">${w}</div>`).join('')}</div>`;
+  html+=`<div class="cal-grid">`;
+  for(let i=0;i<firstDay;i++)html+=`<div class="cal-day empty"></div>`;
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday=ds===todayStr;
+    const act=activeDates[ds];
+    const hol=getHoliday(ds);
+    let dots='';
+    let cls='cal-day';
+    if(isToday)cls+=' today';
+    if(hol)cls+=' holiday';
+    if(act){
+      cls+=' active';
+      const dotsArr=[];
+      if(act.tasks.length>0)dotsArr.push(`<span class="cal-dot task-dot"></span>`);
+      if(act.events.length>0)dotsArr.push(`<span class="cal-dot event-dot"></span>`);
+      dots=`<div class="cal-dots">${dotsArr.join('')}</div>`;
+    }
+    const holBadge=hol?`<div class="cal-holiday-label">${tp('cal.'+hol.zh)||hol.zh}</div>`:'';
+    const holLabel=hol?`<div class="cal-holiday-text">${hol[currentLang]||hol.zh}</div>`:'';
+    const actCount=act?`<div class="cal-activity-count">${act.tasks.length+act.events.length}</div>`:'';
+    html+=`<div class="${cls}" onclick="calDayClick('${ds}')"><div class="cal-day-num">${day}</div>${holLabel}${actCount}${dots}</div>`;
+  }
+  html+=`</div>`;
+  // Legend
+  html+=`<div class="cal-legend"><div class="cal-legend-item"><span class="cal-dot task-dot"></span><span data-i18n="cal.taskLegend">任务</span></div><div class="cal-legend-item"><span class="cal-dot event-dot"></span><span data-i18n="cal.eventLegend">行程</span></div><div class="cal-legend-item"><span class="cal-dot holiday-dot"></span><span data-i18n="cal.holidayLegend">节日</span></div></div>`;
+  const el=document.getElementById('calendarContainer');
+  if(el)el.innerHTML=html;
+}
+function calPrevMonth(){calCursor.setMonth(calCursor.getMonth()-1);renderCalendar()}
+function calNextMonth(){calCursor.setMonth(calCursor.getMonth()+1);renderCalendar()}
+function calDayClick(dateStr){
+  const act=appData.tasks.filter(t=>t.dueDate===dateStr);
+  const evs=(appData.events&&appData.events[dateStr])?[appData.events[dateStr]]:[];
+  const hol=getHoliday(dateStr);
+  const d=new Date(dateStr+'T00:00:00');
+  const dateLabel=d.toLocaleDateString(currentLang==='en'?'en-US':'zh-CN',{month:'long',day:'numeric'});
+  let html=`<div class="cal-day-detail">`;
+  if(hol)html+=`<div class="cal-detail-holiday">🎉 ${hol[currentLang]||hol.zh}</div>`;
+  if(act.length>0){
+    html+=`<div class="cal-detail-section"><div class="cal-detail-title">${tp('cal.tasksOnDay')}</div>`;
+    act.forEach(t=>{html+=`<div class="cal-detail-item ${t.status==='completed'?'done':''}"><span class="priority-badge priority-${t.priority}" style="font-size:0.6rem">${tp('priority.'+t.priority)}</span> ${escapeHtml(t.title)}${t.status==='completed'?' ✓':''}</div>`});
+    html+=`</div>`;
+  }
+  if(evs.length>0){
+    html+=`<div class="cal-detail-section"><div class="cal-detail-title">${tp('cal.eventsOnDay')}</div>`;
+    evs.forEach(e=>{html+=`<div class="cal-detail-item event">📋 ${escapeHtml(e.title)}${e.description?`<div class="cal-detail-desc">${escapeHtml(e.description)}</div>`:''}</div>`});
+    html+=`</div>`;
+  }
+  if(!hol&&act.length===0&&evs.length===0){
+    html+=`<div class="empty-state"><div class="empty-state-text">${tp('cal.noActivity')}</div></div>`;
+  }
+  // Add event form
+  html+=`<div class="cal-add-event"><input type="text" class="form-input cal-event-input" id="calEventTitle" placeholder="${tp('cal.eventPlaceholder')}" onkeydown="if(event.key==='Enter'){calAddEvent('${dateStr}')}"><button class="btn btn-primary btn-sm" onclick="calAddEvent('${dateStr}')" data-i18n="cal.addEvent">添加行程</button></div>`;
+  html+=`</div>`;
+  // Show in modal
+  const modal=document.getElementById('calendarDayModal');
+  document.getElementById('calendarDayTitle').textContent=dateLabel;
+  document.getElementById('calendarDayContent').innerHTML=html;
+  modal.classList.add('open');
+  applyLanguage();
+}
+function calAddEvent(dateStr){
+  const title=document.getElementById('calEventTitle').value.trim();
+  if(!title)return;
+  if(!appData.events)appData.events={};
+  appData.events[dateStr]={title,description:'',createdAt:now()};
+  saveData(appData);
+  showToast(tp('toast.eventAdded'),'success');
+  calDayClick(dateStr);
+  renderCalendar();
+}
+function checkScheduledEventsForToday(){
+  const d=today();
+  if(appData.events&&appData.events[d]){
+    const ev=appData.events[d];
+    const plan=getTodayPlan();
+    // Check if already added as task
+    const existing=appData.tasks.find(t=>t.title===ev.title&&t.dueDate===d&&t.source==='calendar');
+    if(!existing){
+      const task=addTask({title:ev.title,description:ev.description||'',dueDate:d,priority:'high',category:'other',source:'calendar'});
+      plan.scheduledTasks.push(task.id);
+      saveData(appData);
+      showToast(tp('toast.eventAutoAdded',{title:ev.title}),'success');
+    }
+  }
+}
+
+// ============================================
+// DATA EXPORT / IMPORT
+// ============================================
+function exportData(){
+  const data=JSON.stringify(appData,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`focus-backup-${today()}.json`;a.click();
+  URL.revokeObjectURL(url);
+  showToast(tp('toast.dataExported'),'success');
+}
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.tasks||!data.ideas)throw new Error('Invalid format');
+      appData={...defData(),...data};
+      saveData(appData);
+      applyLanguage();renderAll();
+      showToast(tp('toast.dataImported'),'success');
+    }catch(err){showToast(tp('toast.importFailed'),'error')}
+  };
+  reader.readAsText(file);
+}
+
+// ============================================
 // DAILY AUTO-UPDATE & NOTIFICATIONS
 // ============================================
 function dailyAutoCheck(){
@@ -1451,6 +1819,8 @@ function dailyAutoCheck(){
         autoPlanDay(); // Auto-plan on new day with overdue tasks
       }
     }
+    // Auto-add today's scheduled events to plan
+    checkScheduledEventsForToday();
     // Update streak
     updateStreak('daily_check');
     localStorage.setItem('focus_last_daily_check',d);
