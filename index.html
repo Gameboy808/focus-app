@@ -765,7 +765,21 @@ a{color:inherit;text-decoration:none}
         <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('importFileInput').click()" data-i18n="settings.importData">导入备份</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(this)">
       </div>
-      <div class="text-xs text-muted mt-2" data-i18n="settings.dataSyncHint">导出数据到文件，在另一台设备上导入即可同步。跨设备自动同步功能开发中。</div>
+      <div class="text-xs text-muted mt-2" data-i18n="settings.dataSyncHint">导出数据到文件，在另一台设备上导入即可同步。</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="settings.cloudSync">云端同步</label>
+      <input type="password" class="form-input" id="settingsCloudToken" placeholder="GitHub Token" data-i18n-placeholder="settings.tokenPlaceholder">
+      <div class="text-xs text-muted mt-1" data-i18n="settings.tokenHint">Token 只存在本机浏览器，不会写进代码或上传到任何地方。</div>
+      <div id="cloudSyncStatus" class="text-xs mt-2" style="color:var(--text-muted)"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-secondary" style="flex:1" onclick="cloudUpload()" data-i18n="settings.cloudUpload">上传到云端</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="cloudDownload()" data-i18n="settings.cloudDownload">从云端恢复</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary)">
+        <input type="checkbox" id="settingsAutoSync" onchange="toggleAutoSync()" style="accent-color:var(--accent-amber)">
+        <span data-i18n="settings.autoSync">自动同步（打开应用时拉取，修改后5秒自动上传）</span>
+      </label>
     </div>
     <div class="form-group"><button class="btn btn-secondary" style="width:100%" onclick="resetAllData()" data-i18n="settings.resetData">重置所有数据</button>
       <div class="text-xs text-muted mt-2" style="color:var(--accent-coral)" data-i18n="settings.resetWarning">此操作不可撤销。</div></div>
@@ -969,13 +983,30 @@ const I18N = {
   'settings.dataSync':{en:'Data Sync',zh:'数据同步'},
   'settings.exportData':{en:'Export Backup',zh:'导出备份'},
   'settings.importData':{en:'Import Backup',zh:'导入备份'},
-  'settings.dataSyncHint':{en:'Export to file, import on another device. Auto sync coming soon.',zh:'导出数据到文件，在另一台设备上导入即可同步。跨设备自动同步功能开发中。'},
+  'settings.dataSyncHint':{en:'Export to file, import on another device.',zh:'导出数据到文件，在另一台设备上导入即可同步。'},
+  'settings.cloudSync':{en:'Cloud Sync',zh:'云端同步'},
+  'settings.tokenPlaceholder':{en:'GitHub Personal Access Token',zh:'GitHub 个人访问令牌'},
+  'settings.tokenHint':{en:'Token stays in your browser only, never written into code.',zh:'Token 只存在本机浏览器，不会写进代码或上传到任何地方。'},
+  'settings.cloudUpload':{en:'Upload to Cloud',zh:'上传到云端'},
+  'settings.cloudDownload':{en:'Restore from Cloud',zh:'从云端恢复'},
+  'settings.autoSync':{en:'Auto sync (pull on open, auto-upload 5s after changes)',zh:'自动同步（打开应用时拉取，修改后5秒自动上传）'},
+  'settings.confirmDownload':{en:'Replace local data with cloud version?',zh:'用云端数据覆盖本地？'},
+  'settings.lastUpload':{en:'Last upload:',zh:'上次上传:'},
+  'settings.lastDownload':{en:'Last download:',zh:'上次下载:'},
+  'settings.neverSynced':{en:'Not synced yet',zh:'尚未同步'},
   // Toast messages
   'toast.eventAdded':{en:'Event added',zh:'行程已添加'},
   'toast.eventAutoAdded':{en:"Today's event added to plan",zh:'今日行程已自动加入计划'},
   'toast.dataExported':{en:'Data exported',zh:'数据已导出'},
   'toast.dataImported':{en:'Data imported successfully',zh:'数据导入成功'},
   'toast.importFailed':{en:'Import failed: invalid file',zh:'导入失败：文件格式错误'},
+  'toast.noToken':{en:'Please enter GitHub Token in settings first',zh:'请先在设置中填写 GitHub Token'},
+  'toast.uploading':{en:'Uploading...',zh:'正在上传...'},
+  'toast.downloading':{en:'Downloading...',zh:'正在下载...'},
+  'toast.cloudUploaded':{en:'Uploaded to cloud',zh:'已上传到云端'},
+  'toast.cloudDownloaded':{en:'Restored from cloud',zh:'已从云端恢复'},
+  'toast.cloudSyncFailed':{en:'Cloud sync failed',zh:'云同步失败'},
+  'toast.cloudAutoSynced':{en:'Auto-synced from cloud',zh:'已自动从云端同步'},
 };
 
 let currentLang='zh';
@@ -1018,7 +1049,7 @@ function defData(){return{
 };}
 
 function loadData(){try{const r=localStorage.getItem(SK);if(!r)return defData();const d=JSON.parse(r),df=defData();return{...df,...d,settings:{...df.settings,...d.settings},streak:{...df.streak,...d.streak},english:{...df.english,...(d.english||{})},theme:{...d.theme}}}catch(e){return defData()}}
-function saveData(d){localStorage.setItem(SK,JSON.stringify(d))}
+function saveData(d){localStorage.setItem(SK,JSON.stringify(d));scheduleCloudUpload()}
 
 let appData=loadData();
 currentLang=appData.settings.lang||'zh';
@@ -1577,9 +1608,9 @@ function closeFocusModal(){document.getElementById('focusModal').classList.remov
 // ============================================
 // SETTINGS
 // ============================================
-function openSettings(){document.getElementById('settingsName').value=appData.settings.name||'';document.getElementById('settingsReviewTime').value=appData.settings.reviewTime||'09:00';document.getElementById('settingsModal').classList.add('open')}
+function openSettings(){document.getElementById('settingsName').value=appData.settings.name||'';document.getElementById('settingsReviewTime').value=appData.settings.reviewTime||'09:00';document.getElementById('settingsCloudToken').value=getCloudToken();document.getElementById('settingsAutoSync').checked=localStorage.getItem(AUTOSYNC_KEY)==='1';const lu=localStorage.getItem('focus_last_cloud_upload'),ld=localStorage.getItem('focus_last_cloud_download');let st='';if(lu)st+=tp('settings.lastUpload')+' '+lu;if(ld)st+=(st?' | ':'')+tp('settings.lastDownload')+' '+ld;if(!st)st=tp('settings.neverSynced');showCloudStatus(st,'');document.getElementById('settingsModal').classList.add('open')}
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open')}
-function saveSettings(){appData.settings.name=document.getElementById('settingsName').value.trim()||'凉皮';appData.settings.reviewTime=document.getElementById('settingsReviewTime').value||'09:00';saveData(appData);closeSettings();renderAll();showToast(tp('toast.settingsSaved'),'success')}
+function saveSettings(){appData.settings.name=document.getElementById('settingsName').value.trim()||'凉皮';appData.settings.reviewTime=document.getElementById('settingsReviewTime').value||'09:00';const tk=document.getElementById('settingsCloudToken').value.trim();if(tk)localStorage.setItem(TOKEN_KEY,tk);else if(!document.getElementById('settingsCloudToken').value)localStorage.removeItem(TOKEN_KEY);saveData(appData);closeSettings();renderAll();showToast(tp('toast.settingsSaved'),'success')}
 function resetAllData(){if(!confirm(tp('settings.confirmReset1')))return;if(!confirm(tp('settings.confirmReset2')))return;appData=defData();currentLang=appData.settings.lang||'zh';saveData(appData);closeSettings();document.querySelectorAll('.lang-pill').forEach(p=>p.classList.remove('active'));document.querySelector(`.lang-pill[data-lang="${currentLang}"]`)?.classList.add('active');applyLanguage();showToast(tp('toast.dataReset'),'warning')}
 
 // ============================================
@@ -1806,6 +1837,104 @@ function importData(input){
 }
 
 // ============================================
+// CLOUD SYNC (GitHub Private Repo)
+// ============================================
+const CLOUD_REPO='Gameboy808/focus-cloud-data';
+const CLOUD_FILE='data.json';
+const TOKEN_KEY='focus_github_token';
+const AUTOSYNC_KEY='focus_autosync';
+let cloudSyncTimer=null;
+
+function getCloudToken(){return localStorage.getItem(TOKEN_KEY)||''}
+
+function showCloudStatus(msg,type){
+  const el=document.getElementById('cloudSyncStatus');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=type==='error'?'var(--accent-coral)':type==='success'?'var(--accent-green)':'var(--text-muted)';
+}
+
+function cloudUpload(){
+  const token=getCloudToken();
+  if(!token){showToast(tp('toast.noToken'),'error');return}
+  showCloudStatus(tp('toast.uploading'),'loading');
+  const url=`https://api.github.com/repos/${CLOUD_REPO}/contents/${CLOUD_FILE}`;
+  fetch(url,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}})
+  .then(r=>r.ok?r.json():null)
+  .then(existing=>{
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(appData,null,2))));
+    const body={message:`Sync upload ${new Date().toISOString()}`,content:content};
+    if(existing&&existing.sha)body.sha=existing.sha;
+    return fetch(url,{method:'PUT',headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.content||data.commit){
+      const now=new Date().toLocaleString();
+      localStorage.setItem('focus_last_cloud_upload',now);
+      showCloudStatus(tp('toast.cloudUploaded')+' '+now,'success');
+      showToast(tp('toast.cloudUploaded'),'success');
+    }else{throw new Error(data.message||'Upload failed')}
+  })
+  .catch(err=>{showCloudStatus(tp('toast.cloudSyncFailed')+': '+err.message,'error');showToast(tp('toast.cloudSyncFailed'),'error')});
+}
+
+function cloudDownload(){
+  const token=getCloudToken();
+  if(!token){showToast(tp('toast.noToken'),'error');return}
+  if(!confirm(tp('settings.confirmDownload')))return;
+  showCloudStatus(tp('toast.downloading'),'loading');
+  const url=`https://api.github.com/repos/${CLOUD_REPO}/contents/${CLOUD_FILE}`;
+  fetch(url,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}})
+  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(data=>{
+    const content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    const cloudData=JSON.parse(content);
+    appData={...defData(),...cloudData};
+    saveData(appData);
+    applyLanguage();renderAll();
+    const now=new Date().toLocaleString();
+    localStorage.setItem('focus_last_cloud_download',now);
+    showCloudStatus(tp('toast.cloudDownloaded')+' '+now,'success');
+    showToast(tp('toast.cloudDownloaded'),'success');
+  })
+  .catch(err=>{showCloudStatus(tp('toast.cloudSyncFailed')+': '+err.message,'error');showToast(tp('toast.cloudSyncFailed'),'error')});
+}
+
+function toggleAutoSync(){
+  const enabled=document.getElementById('settingsAutoSync').checked;
+  localStorage.setItem(AUTOSYNC_KEY,enabled?'1':'0');
+}
+
+function scheduleCloudUpload(){
+  if(localStorage.getItem(AUTOSYNC_KEY)!=='1')return;
+  if(!getCloudToken())return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=setTimeout(()=>{cloudUpload()},5000);
+}
+
+function autoCloudDownload(){
+  if(localStorage.getItem(AUTOSYNC_KEY)!=='1')return;
+  if(!getCloudToken())return;
+  const url=`https://api.github.com/repos/${CLOUD_REPO}/contents/${CLOUD_FILE}`;
+  fetch(url,{headers:{'Authorization':`token ${getCloudToken()}`,'Accept':'application/vnd.github.v3+json'}})
+  .then(r=>{if(!r.ok)return null;return r.json()})
+  .then(data=>{
+    if(!data||!data.content)return;
+    const content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    const cloudData=JSON.parse(content);
+    const cloudDate=data.commit&&data.commit.committer?data.commit.committer.date:'';
+    const localLast=localStorage.getItem('focus_last_cloud_upload')||'';
+    if(cloudDate&&cloudDate>localLast){
+      appData={...defData(),...cloudData};
+      saveData(appData);applyLanguage();renderAll();
+      showToast(tp('toast.cloudAutoSynced'),'success');
+    }
+  })
+  .catch(()=>{});
+}
+
+// ============================================
 // DAILY AUTO-UPDATE & NOTIFICATIONS
 // ============================================
 function dailyAutoCheck(){
@@ -1858,6 +1987,7 @@ function init(){
   requestNotificationPermission();
   setInterval(checkForOverdueReminders,30*60*1000);
   setTimeout(checkForOverdueReminders,3000);
+  autoCloudDownload();
   // Re-check at midnight
   const msUntilMidnight=new Date().setHours(24,0,0,0)-Date.now();
   setTimeout(()=>{dailyAutoCheck();setInterval(dailyAutoCheck,86400000)},msUntilMidnight+1000);
